@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# a lancer avec comme param le rep contenant les photos
+# on considere que les fichiers presents sont tous des images
+# necessite bash find wc ls bc et convert
+
+# Directories
+
+echo -n "Creating directories..." &&
+
+cd $1 &&
+
+mkdir high medium low thumbnails &&
+for a in `find -maxdepth 1 -type f`; do
+  mv $a high;
+done &&
+
+echo " OK" &&
+
+# Thumbnails
+
+echo -n "Creating miniatures" &&
+
+cd high &&
+
+for a in *; do echo -n "."; convert -resize 640x480 $a ../medium/$a; done &&
+for a in *; do echo -n "."; convert -resize 320x240 $a ../low/$a; done &&
+for a in *; do echo -n "."; convert -resize 120x90 $a ../thumbnails/$a; done &&
+
+echo " OK"
+
+# HTML
+
+echo -n "Creating index web page..." &&
+
+cd .. &&
+
+
+echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">" > index.html &&
+echo "<html>" >> index.html &&
+echo "<head>" >> index.html &&
+echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=ISO-8859-1\">" >> index.html &&
+echo "<title> $1 </title>" >> index.html &&
+echo "</head>" >> index.html &&
+echo "<body>" >> index.html &&
+echo "<h1> $1 </h1>" >> index.html &&
+echo "<br>" >> index.html &&
+echo "<table border=\"1\">" >> index.html &&
+echo "<tr>" >> index.html
+
+for a in `ls --color=no high `; do
+
+  if [ `echo \`grep "<td" index.html | wc -l\` "%4" | bc` == 0 ]; then
+    echo "</tr><tr>" >> index.html
+  fi
+
+  echo "<td align=\"center\" >" >> index.html &&
+  echo "<font size="2">" >> index.html &&
+  echo "<b> $a </b>" >> index.html &&
+  echo "</font>" >> index.html &&
+  echo "<br>" >> index.html &&
+  echo "<img src="thumbnails/$a">" >> index.html &&
+  echo "<br>" >> index.html &&
+  echo "<font size="2">" >> index.html &&
+  echo "<a href=\"low/$a\">low</a>" >> index.html &&
+  echo "<a href=\"medium/$a\">medium</a>" >> index.html &&
+  echo "<a href=\"high/$a\">high</a>" >> index.html &&
+  echo "</font>" >> index.html &&
+  echo "</td>" >> index.html
+
+done &&
+
+echo "</tr>" >> index.html &&
+echo "</table>" >> index.html &&
+echo "</body>" >> index.html &&
+echo "</html>" >> index.html &&
+
+echo " OK" &&
+echo "mkalbum completed."
